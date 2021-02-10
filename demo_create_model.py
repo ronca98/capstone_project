@@ -58,10 +58,10 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 
 # Not yet familiar why the guide adds more of these layers
-model.add(Conv2D(64, (3, 3), padding="same", activation="relu"))
-model.add(Conv2D(64, (3, 3), activation="relu"))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
+#model.add(Conv2D(64, (3, 3), padding="same", activation="relu"))
+#model.add(Conv2D(64, (3, 3), activation="relu"))
+#model.add(MaxPooling2D(pool_size=(2, 2)))
+#model.add(Dropout(0.25))
 
 # We need to flatten the 2D x,y pixel data
 # When going from Convolution to Dense Layers
@@ -92,10 +92,10 @@ model.fit(
 
 # Save neural network structure
 model_structure = model.to_json()
-file_path = Path("model_structure.json")
+file_path = Path("model_structure_less_layers.json")
 file_path.write_text(model_structure)
 
 # Save neural network's trained weights
-model.save_weights("model_weights.h5")
+model.save_weights("model_weights_less_layers.h5")
 
 

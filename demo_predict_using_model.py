@@ -18,13 +18,13 @@ class_labels = {
 }
 
 # Load the model's structure in the .json file
-file_path = Path("model_structure.json")
+file_path = Path("model_structure_less_layers.json")
 model_structure = file_path.read_text()
 
 model = model_from_json(model_structure)
 
 # Load the weight's file from the .h5 file
-model.load_weights("model_weights.h5")
+model.load_weights("model_weights_less_layers.h5")
 
 # Load the cat .png image for testing
 img = image.load_img("cat.png", target_size=(32, 32))
@@ -38,6 +38,7 @@ list_of_images = np.expand_dims(image_to_try, axis=0)
 
 # Make a prediction using our created model
 results = model.predict(list_of_images)
+print(results)
 single_result = results[0]
 
 most_likely_class_index = int(np.argmax(single_result))
