@@ -2,9 +2,9 @@ import keras
 from pathlib import Path
 import numpy as np
 from keras.datasets import cifar10
-from keras.applications import vgg16
+from keras.applications import resnet50, vgg16, mobilenet
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Dense, Flatten
 
 # These are the class labels that correspond to the images in the cifar10 dataset
 cifar10_class_labels = {
@@ -26,7 +26,7 @@ cifar10_class_labels = {
 # 10000 total test images and labels (used for validation, just different naming)
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
-# Normalize data set to values between 0 and 1
+# Numpy is usually used to deal with multi dimensional arrays
 x_train = np.array(x_train)
 x_test = np.array(x_test)
 
@@ -36,27 +36,15 @@ y_train = keras.utils.to_categorical(y_train, 10)
 y_test = np.array(y_test)
 y_test = keras.utils.to_categorical(y_test, 10)
 
-x_train = vgg16.preprocess_input(x_train)
-x_test = vgg16.preprocess_input(x_test)
+# Normalize data set to values between 0 and 1
+x_train = resnet50.preprocess_input(x_train)
+x_test = resnet50.preprocess_input(x_test)
 
-# Load a pre-trained neural network to use as a feature extractor
+# Load an existing neural  network to use as a feature extractor
 # image_top = False means we cut off the last layer of this neural network
-# This is a common step for transfer learning
-pre_trained_nn = vgg16.VGG16(weights="imagenet",
-                             include_top=False,
-                             input_shape=(32, 32, 3))
-
-x_train = pre_trained_nn.predict(x_train)
-x_test = pre_trained_nn.predict(x_test)
-
-# Create a model and add layers
-model = Sequential()
-
-# Since we have features extracted, we don't require any convolutional layers
-model.add(Flatten(input_shape=x_train.shape[1:]))
-model.add(Dense(256, activation="relu"))
-model.add(Dropout(0.5))
-model.add(Dense(10, activation="sigmoid"))
+model = resnet50.ResNet50(weights=None,
+                          input_shape=(32, 32, 3),
+                          classes=10)
 
 # Compile model
 model.compile(
@@ -76,9 +64,9 @@ model.fit(
 
 # Save neural network structure
 model_structure = model.to_json()
-file_path = Path("vgg16_cifar10_model_structure.json")
+file_path = Path("model_cifar10_data_structure.json")
 file_path.write_text(model_structure)
 
 # Save neural network weights
-model.save_weights("vgg16_cifar10_model_weights.h5")
+model.save_weights("model_cifar10_data_weights.h5")
 
