@@ -1,59 +1,85 @@
 import keras
 import numpy as np
-# import matplotlib.pyplot as plt
-from keras.datasets import cifar10
+from keras.preprocessing import image
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 from pathlib import Path
 
-# Specify our 10 classes for the cifar_10 data set
-# Since we know the class numbers for the data set, these numbers and corresponding
-# labels are already known.
-cifar10_class_names = {
-    0: "Plane",
-    1: "Car",
-    2: "Bird",
-    3: "Cat",
-    4: "Deer",
-    5: "Dog",
-    6: "Frog",
-    7: "Horse",
-    8: "Boat",
-    9: "Truck"
-}
+# Training data
+normal_images = Path("normal_images")
+under_extruded_images = Path("under_extruded_images")
+images = []
+labels = []
 
-# Loading in our data
-# x are the actual images , while y are the class number corresponding to those images
-# 50000 total training images and labels
-# 10000 total test images and labels
-(x_train, y_train), (x_test, y_test) = cifar10.load_data()
-sample_first_img = x_train[0]
-class_number_first_img = y_train[0][0]
+# Load all normal training images
+for img in normal_images.glob("*.png"):
+    img = image.load_img(img)
 
-# Showing the first image happens to be a frog which is class 6: Frog
-# plt.imshow(sample_first_img)
-# plt.title(class_number_first_img)
-# plt.show()
+    image_array = image.img_to_array(img)
+    images.append(image_array)
 
-# --------------------------------------------------------------------
-# Now are the steps for setting up CNN
+    # we associate 0 as the label number for not-dog images
+    labels.append(0)
 
-# Normalize data set to values between 0 and 1
-x_train = x_train.astype("float32")
-x_test = x_test.astype("float32")
-x_train = x_train / 255
-x_test = x_test / 255
+# Load all under extruded training images
+for img in under_extruded_images.glob("*.png"):
+    img = image.load_img(img)
+
+    image_array = image.img_to_array(img)
+    images.append(image_array)
+
+    # associate 1 as the label number for dog images
+    labels.append(1)
+
+# Validation data
+vd_normal_images = Path("validation_images/normal")
+vd_under_extruded_images = Path("validation_images/under_extruded")
+vd_images = []
+vd_labels = []
+
+# Load all normal validation images
+for img in vd_normal_images.glob("*.png"):
+    img = image.load_img(img)
+
+    image_array = image.img_to_array(img)
+    vd_images.append(image_array)
+
+    # we associate 0 as the label number for not-dog images
+    vd_labels.append(0)
+
+# Load all under extruded validation images
+for img in vd_under_extruded_images.glob("*.png"):
+    img = image.load_img(img)
+
+    image_array = image.img_to_array(img)
+    vd_images.append(image_array)
+
+    # associate 1 as the label number for dog images
+    vd_labels.append(1)
+
+# Numpy is usually used to deal with multi dimensional arrays
+x_train = np.array(images)
+x_val = np.array(vd_images)
 
 # Setting up our class labels for keras
-y_train = keras.utils.to_categorical(y_train, 10)
-y_test = keras.utils.to_categorical(y_test, 10)
+y_train = np.array(labels)
+y_val = np.array(vd_labels)
+y_train = keras.utils.to_categorical(y_train, 2)
+y_val = keras.utils.to_categorical(y_val, 2)
+
+# Normalize data set to values between 0 and 1
+x_train = x_train / 255
+x_val = x_val / 255
 
 # Add Convolutional layers
 model = Sequential()
-model.add(Conv2D(32, (3, 3), padding="same", activation="relu", input_shape=(32, 32, 3)))
-model.add(Conv2D(32, (3, 3), activation="relu"))
+model.add(Conv2D(64, (4, 4),
+                 padding="same",
+                 activation="relu",
+                 input_shape=(224, 224, 3)))
+model.add(Conv2D(64, (4, 4), activation="relu"))
 # MaxPooling to reduce size of images but keeping the most important information
-model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(MaxPooling2D(pool_size=(4, 4)))
 # randomly cut 25% of neural network
 model.add(Dropout(0.25))
 
@@ -68,8 +94,8 @@ model.add(Dropout(0.25))
 model.add(Flatten())
 
 model.add(Dense(512, activation="relu"))
-model.add(Dropout(0.50))
-model.add(Dense(10, activation="softmax"))
+#model.add(Dropout(0.50))
+model.add(Dense(2, activation="softmax"))
 
 # Compile the Model
 model.compile(loss="categorical_crossentropy",
@@ -84,10 +110,9 @@ model.summary()
 model.fit(
     x_train,
     y_train,
-    batch_size=32,
     epochs=30,
-    validation_data=(x_test, y_test),
-    shuffle=True
+    shuffle=True,
+    validation_data=(x_val, y_val)
 )
 
 # Save neural network structure
