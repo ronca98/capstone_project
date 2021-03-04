@@ -2,125 +2,171 @@ import keras
 import numpy as np
 from keras.preprocessing import image
 from keras.models import Sequential
+from keras.applications import resnet50
 from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 from pathlib import Path
 
-# Training data
-normal_images = Path("normal_images")
-under_extruded_images = Path("under_extruded_images")
-images = []
-labels = []
 
-# Load all normal training images
-for img in normal_images.glob("*.png"):
-    img = image.load_img(img)
+# Function for creating our array of images and labels to feed into model
+def img_array_and_labels(images,
+                         labels,
+                         folder_path,
+                         class_num):
 
-    image_array = image.img_to_array(img)
-    images.append(image_array)
+    for img in folder_path.glob("*.png"):
+        img = image.load_img(img)
 
-    # we associate 0 as the label number for not-dog images
-    labels.append(0)
+        image_array = image.img_to_array(img)
+        images.append(image_array)
 
-# Load all under extruded training images
-for img in under_extruded_images.glob("*.png"):
-    img = image.load_img(img)
+        labels.append(class_num)
 
-    image_array = image.img_to_array(img)
-    images.append(image_array)
+    return images, labels
 
-    # associate 1 as the label number for dog images
-    labels.append(1)
 
-# Validation data
-vd_normal_images = Path("validation_images/normal")
-vd_under_extruded_images = Path("validation_images/under_extruded")
-vd_images = []
-vd_labels = []
+# We can use this function to create our own ConvNet
+def generate_model():
+    model = Sequential()
+    # Add Convolutional layer
+    model.add(Conv2D(64, (3, 3),
+                     padding="same",
+                     activation="relu",
+                     input_shape=(50, 224, 3)))
+    # MaxPooling to reduce size of images but keeping the most important information
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    # randomly cut 25% of neural network
+    model.add(Dropout(0.25))
 
-# Load all normal validation images
-for img in vd_normal_images.glob("*.png"):
-    img = image.load_img(img)
+    # We need to flatten the 2D x,y pixel data
+    # When going from Convolution to Dense Layers
+    model.add(Flatten())
+    model.add(Dense(512, activation="relu"))
+    model.add(Dense(3, activation="softmax"))
 
-    image_array = image.img_to_array(img)
-    vd_images.append(image_array)
+    return model
 
-    # we associate 0 as the label number for not-dog images
-    vd_labels.append(0)
 
-# Load all under extruded validation images
-for img in vd_under_extruded_images.glob("*.png"):
-    img = image.load_img(img)
+def generate_model_TL(x_train, x_val):
 
-    image_array = image.img_to_array(img)
-    vd_images.append(image_array)
+    pre_trained_nn = resnet50.ResNet50(weights="imagenet",
+                                       input_shape=(50, 224, 3),
+                                       include_top=False)
+    x_train = pre_trained_nn.predict(x_train)
+    x_val = pre_trained_nn.predict(x_val)
 
-    # associate 1 as the label number for dog images
-    vd_labels.append(1)
+    # Create a model and add layers
+    model = Sequential()
 
-# Numpy is usually used to deal with multi dimensional arrays
-x_train = np.array(images)
-x_val = np.array(vd_images)
+    # Since we have features extracted, we don't require any layers besides the
+    # last classification layers of a CNN
+    model.add(Flatten(input_shape=x_train.shape[1:]))
+    model.add(Dense(512, activation="relu"))
+    model.add(Dense(3, activation="softmax"))
 
-# Setting up our class labels for keras
-y_train = np.array(labels)
-y_val = np.array(vd_labels)
-y_train = keras.utils.to_categorical(y_train, 2)
-y_val = keras.utils.to_categorical(y_val, 2)
+    return model, x_train, x_val
 
-# Normalize data set to values between 0 and 1
-x_train = x_train / 255
-x_val = x_val / 255
 
-# Add Convolutional layers
-model = Sequential()
-model.add(Conv2D(64, (4, 4),
-                 padding="same",
-                 activation="relu",
-                 input_shape=(224, 224, 3)))
-model.add(Conv2D(64, (4, 4), activation="relu"))
-# MaxPooling to reduce size of images but keeping the most important information
-model.add(MaxPooling2D(pool_size=(4, 4)))
-# randomly cut 25% of neural network
-model.add(Dropout(0.25))
+def main():
 
-# Not yet familiar why the guide adds more of these layers
-#model.add(Conv2D(64, (3, 3), padding="same", activation="relu"))
-#model.add(Conv2D(64, (3, 3), activation="relu"))
-#model.add(MaxPooling2D(pool_size=(2, 2)))
-#model.add(Dropout(0.25))
+    # Training data
+    normal_images = Path("normal_images")
+    under_extruded_images = Path("under_extruded_images")
+    over_extruded_images = Path("over_extruded_images")
+    td_images = []
+    td_labels = []
 
-# We need to flatten the 2D x,y pixel data
-# When going from Convolution to Dense Layers
-model.add(Flatten())
+    # Load all normal training images
+    td_images, td_labels = img_array_and_labels(td_images,
+                                                td_labels,
+                                                normal_images,
+                                                class_num=0)
 
-model.add(Dense(512, activation="relu"))
-#model.add(Dropout(0.50))
-model.add(Dense(2, activation="softmax"))
+    # Load all under extruded training images
+    td_images, td_labels = img_array_and_labels(td_images,
+                                                td_labels,
+                                                under_extruded_images,
+                                                class_num=1)
 
-# Compile the Model
-model.compile(loss="categorical_crossentropy",
-              optimizer="adam",
-              metrics=["accuracy"])
+    # Load all over extruded training images
+    td_images, td_labels = img_array_and_labels(td_images,
+                                                td_labels,
+                                                over_extruded_images,
+                                                class_num=2)
 
-# Print a summary of model
-# Note, Param # means total number of weights in that layer
-model.summary()
+    # Validation data
+    vd_normal_images = Path("validation_images/normal")
+    vd_under_extruded_images = Path("validation_images/under_extruded")
+    vd_over_extruded_images = Path("validation_images/over_extruded")
+    vd_images = []
+    vd_labels = []
 
-# Train the model
-model.fit(
-    x_train,
-    y_train,
-    epochs=30,
-    shuffle=True,
-    validation_data=(x_val, y_val)
-)
+    # Load all validation training images
+    vd_images, vd_labels = img_array_and_labels(vd_images,
+                                                vd_labels,
+                                                vd_normal_images,
+                                                class_num=0)
 
-# Save neural network structure
-model_structure = model.to_json()
-file_path = Path("model_structure.json")
-file_path.write_text(model_structure)
+    # Load all under extruded validation images
+    vd_images, vd_labels = img_array_and_labels(vd_images,
+                                                vd_labels,
+                                                vd_under_extruded_images,
+                                                class_num=1)
 
-# Save neural network's trained weights
-model.save_weights("model_weights.h5")
+    # Load all over extruded validation images
+    vd_images, vd_labels = img_array_and_labels(vd_images,
+                                                vd_labels,
+                                                vd_over_extruded_images,
+                                                class_num=2)
+
+    # Numpy is usually used to deal with multi dimensional arrays
+    x_train = np.array(td_images)
+    x_val = np.array(vd_images)
+
+    # Setting up our class labels for keras
+    y_train = np.array(td_labels)
+    y_val = np.array(vd_labels)
+    y_train = keras.utils.to_categorical(y_train, 3)
+    y_val = keras.utils.to_categorical(y_val, 3)
+
+    # Normalize data set to values between 0 and 1
+    x_train = x_train / 255
+    x_val = x_val / 255
+
+    # We call either one of the CNN methodologies
+    # model, x_train, x_val = generate_model_TL(x_train, x_val)
+
+    model = generate_model()
+
+    # Compile the Model
+    model.compile(loss="categorical_crossentropy",
+                  optimizer="adam",
+                  metrics=["accuracy"])
+
+    # Print a summary of model
+    # Note, Param # means total number of weights in that layer
+    model.summary()
+
+    # Train the model
+    model.fit(
+        x_train,
+        y_train,
+        epochs=50,
+        shuffle=True,
+        validation_data=(x_val, y_val)
+    )
+
+    # Save neural network structure
+    model_structure = model.to_json()
+    file_path = Path("model_structure.json")
+    file_path.write_text(model_structure)
+
+    # Save neural network's trained weights
+    model.save_weights("model_weights.h5")
+
+
+if __name__ == '__main__':
+    main()
+
+
 
 
