@@ -4,7 +4,7 @@ from keras.preprocessing import image
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from keras.applications import resnet50
+from keras.applications import mobilenet, resnet50, xception
 import gc
 
 
@@ -27,12 +27,13 @@ def predict_with_CNN(img):
     list_of_images = np.expand_dims(img, axis=0)
 
     # Make a prediction using resnet50 with transfer learning
-    # feature_extraction_model = resnet50.ResNet50(weights="imagenet", include_top=False, input_shape=(50, 224, 3))
-    # features = feature_extraction_model.predict(list_of_images)
-    # results = model.predict(features)
+    feature_extraction_model = mobilenet.MobileNet(weights="imagenet", include_top=False, input_shape=(224, 224, 3))
+    features = feature_extraction_model.predict(list_of_images)
+    results = model.predict(features)
 
     # Make a prediction using our created model
-    results = model.predict(list_of_images)
+    # results = model.predict(list_of_images)
+
     class_number = np.argmax(results[0])
     likelihood = np.max(results[0])
 
@@ -59,15 +60,16 @@ def predict_with_CNN(img):
 
 def main():
 
-    resolution = (50, 224)
+    resolution = (224, 224)
     class_numbers = []
     likelihoods = []
     img_numbers = []
 
     # This for loop will eventually be replaced with a live feed of images coming in
-    for img_num in range(73, 134):
-        img = image.load_img(fr"images_to_try\N_feb20_100_cube_30_{img_num}.png",
-                             target_size=resolution)
+    for img_num in range(72, 494):
+        img = image.load_img(fr"images_to_try\O_20_diameter_cylinder_125_235temp_{img_num}.png",
+                             target_size=resolution,
+                             color_mode="rgb")
         print(img_num)
         img_numbers.append(img_num)
         class_num, likelihood = predict_with_CNN(img)

@@ -2,7 +2,7 @@ import keras
 import numpy as np
 from keras.preprocessing import image
 from keras.models import Sequential
-from keras.applications import resnet50
+from keras.applications import mobilenet, resnet50, xception
 from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 from pathlib import Path
 
@@ -14,7 +14,8 @@ def img_array_and_labels(images,
                          class_num):
 
     for img in folder_path.glob("*.png"):
-        img = image.load_img(img)
+        img = image.load_img(img,
+                             color_mode="rgb")
 
         image_array = image.img_to_array(img)
         images.append(image_array)
@@ -28,12 +29,12 @@ def img_array_and_labels(images,
 def generate_model():
     model = Sequential()
     # Add Convolutional layer
-    model.add(Conv2D(64, (3, 3),
+    model.add(Conv2D(32, (3, 3),
                      padding="same",
                      activation="relu",
-                     input_shape=(50, 224, 3)))
+                     input_shape=(224, 224, 1)))
     # MaxPooling to reduce size of images but keeping the most important information
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(MaxPooling2D(pool_size=(4, 4)))
     # randomly cut 25% of neural network
     model.add(Dropout(0.25))
 
@@ -48,9 +49,10 @@ def generate_model():
 
 def generate_model_TL(x_train, x_val):
 
-    pre_trained_nn = resnet50.ResNet50(weights="imagenet",
-                                       input_shape=(50, 224, 3),
-                                       include_top=False)
+    pre_trained_nn = mobilenet.MobileNet(weights="imagenet",
+                                         input_shape=(224, 224, 3),
+                                         include_top=False)
+    print(len(pre_trained_nn.layers))
     x_train = pre_trained_nn.predict(x_train)
     x_val = pre_trained_nn.predict(x_val)
 
@@ -133,9 +135,9 @@ def main():
     x_val = x_val / 255
 
     # We call either one of the CNN methodologies
-    # model, x_train, x_val = generate_model_TL(x_train, x_val)
+    model, x_train, x_val = generate_model_TL(x_train, x_val)
 
-    model = generate_model()
+    # model = generate_model()
 
     # Compile the Model
     model.compile(loss="categorical_crossentropy",
@@ -150,7 +152,7 @@ def main():
     model.fit(
         x_train,
         y_train,
-        epochs=50,
+        epochs=100,
         shuffle=True,
         validation_data=(x_val, y_val)
     )
