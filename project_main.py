@@ -2,6 +2,7 @@ from keras.models import model_from_json
 from pathlib import Path
 from keras.preprocessing import image
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras.applications import mobilenet, resnet50, xception
@@ -26,9 +27,13 @@ def predict_with_CNN(img):
     # image to model to see if it'll classify the picture of the cat as cat.
     list_of_images = np.expand_dims(img, axis=0)
 
-    # Make a prediction using resnet50 with transfer learning
-    feature_extraction_model = mobilenet.MobileNet(weights="imagenet", include_top=False, input_shape=(224, 224, 3))
-    features = feature_extraction_model.predict(list_of_images)
+    # for TL we convert the images we want to predict into feature data
+    conv_layers = mobilenet.MobileNet(weights="imagenet",
+                                      include_top=False,
+                                      input_shape=(224, 224, 3))
+    features = conv_layers.predict(list_of_images)
+    # The use of .predict here is the expected use as we now have
+    # feature data to feed into a model with strictly classification layers
     results = model.predict(features)
 
     # Make a prediction using our created model
@@ -40,13 +45,14 @@ def predict_with_CNN(img):
     # Print the result
     print(f"Belongs to class number: {class_number}")
     print(f"Likelihood: {likelihood * 100}%")
-    cifar10_class_names = {
+    class_names = {
         0: "normal",
         1: "under_extruded",
         2: "over_extruded"
 
     }
-    print(f"Class number {class_number} corresponds to class: {cifar10_class_names[class_number]}.")
+    class_name = class_names[class_number]
+    print(f"Class number {class_number} corresponds to class: {class_name}.")
 
     # We need to clear after every prediction, this is needed for real-time image feeding into model
     # Otherwise I will get memory leak
@@ -55,26 +61,40 @@ def predict_with_CNN(img):
     gc.collect()
 
     return (class_number,
+            class_name,
             likelihood*100)
 
 
 def main():
 
-    resolution = (224, 224)
+    file_names = []
     class_numbers = []
+    class_names = []
     likelihoods = []
     img_numbers = []
 
     # This for loop will eventually be replaced with a live feed of images coming in
-    for img_num in range(72, 494):
-        img = image.load_img(fr"images_to_try\O_20_diameter_cylinder_125_235temp_{img_num}.png",
-                             target_size=resolution,
+    for img_num in range(71, 452):
+        file_path = Path(f"images_to_try/Princess_Leia_normal_{img_num}.png")
+        file_name = file_path.name
+        file_names.append(file_name)
+        img = image.load_img(file_path,
+                             target_size=(224, 224),
                              color_mode="rgb")
         print(img_num)
         img_numbers.append(img_num)
-        class_num, likelihood = predict_with_CNN(img)
+        class_num, class_name, likelihood = predict_with_CNN(img)
         class_numbers.append(class_num)
+        class_names.append(class_name)
         likelihoods.append(likelihood)
+
+    # Code for outputting results in .csv form
+    prediction_results_csv = pd.DataFrame({"File Name": file_names,
+                                           "Image Number": img_numbers,
+                                           "Class Name": class_names,
+                                           "Likelihood": likelihoods})
+
+    prediction_results_csv.to_csv("prediction_results.csv", index=False)
 
     # Code for plotting results
     fig, ax1 = plt.subplots()

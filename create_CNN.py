@@ -27,42 +27,57 @@ def img_array_and_labels(images,
 
 # We can use this function to create our own ConvNet
 def generate_model():
+    # Create a model and add layers
     model = Sequential()
-    # Add Convolutional layer
+
+    # Add Convolutional layers to convert image data into feature data
     model.add(Conv2D(32, (3, 3),
                      padding="same",
                      activation="relu",
-                     input_shape=(224, 224, 1)))
-    # MaxPooling to reduce size of images but keeping the most important information
+                     input_shape=(224, 224, 3)))
+    model.add(Conv2D(32, (5, 5), activation="relu"))
+    model.add(Conv2D(32, (5, 5), activation="relu"))
+    # MaxPooling to reduce size and complexity of feature data before classification
     model.add(MaxPooling2D(pool_size=(4, 4)))
     # randomly cut 25% of neural network
-    model.add(Dropout(0.25))
+    # model.add(Dropout(0.25))
 
-    # We need to flatten the 2D x,y pixel data
-    # When going from Convolution to Dense Layers
+    # Feature data needs to be converted to 1D vector
+    # before going into classification layers.
     model.add(Flatten())
-    model.add(Dense(512, activation="relu"))
+
+    # Classification layers
+    model.add(Dense(1024, activation="relu"))
     model.add(Dense(3, activation="softmax"))
 
     return model
 
 
+# This function is used for transfer learning with an existing neural net
 def generate_model_TL(x_train, x_val):
 
-    pre_trained_nn = mobilenet.MobileNet(weights="imagenet",
-                                         input_shape=(224, 224, 3),
-                                         include_top=False)
-    print(len(pre_trained_nn.layers))
-    x_train = pre_trained_nn.predict(x_train)
-    x_val = pre_trained_nn.predict(x_val)
+    # Grabs the convolutional layers from an existing neural net
+    conv_layers = mobilenet.MobileNet(weights="imagenet",
+                                      input_shape=(224, 224, 3),
+                                      include_top=False)
+    # print(len(pre_trained_nn.layers))
+
+    # .predict is NOT used for prediction right now but to send
+    # image data into the convolutional layers of the existing
+    # neural net so that it will convert it into feature data
+    x_train = conv_layers.predict(x_train)
+    x_val = conv_layers.predict(x_val)
 
     # Create a model and add layers
     model = Sequential()
 
-    # Since we have features extracted, we don't require any layers besides the
-    # last classification layers of a CNN
+    # Feature data needs to be converted to 1D vector
+    # before going into classification layers.
     model.add(Flatten(input_shape=x_train.shape[1:]))
-    model.add(Dense(512, activation="relu"))
+
+    # Since we have feature data extracted
+    # we will input them to our own classification layers
+    model.add(Dense(2048, activation="relu"))
     model.add(Dense(3, activation="softmax"))
 
     return model, x_train, x_val
@@ -70,10 +85,12 @@ def generate_model_TL(x_train, x_val):
 
 def main():
 
-    # Training data
-    normal_images = Path("normal_images")
-    under_extruded_images = Path("under_extruded_images")
-    over_extruded_images = Path("over_extruded_images")
+    data_set_folder = Path("data_set")
+
+    # Training data folders
+    normal_images = data_set_folder / "normal_images"
+    under_extruded_images = data_set_folder / "under_extruded_images"
+    over_extruded_images = data_set_folder / "over_extruded_images"
     td_images = []
     td_labels = []
 
@@ -96,9 +113,9 @@ def main():
                                                 class_num=2)
 
     # Validation data
-    vd_normal_images = Path("validation_images/normal")
-    vd_under_extruded_images = Path("validation_images/under_extruded")
-    vd_over_extruded_images = Path("validation_images/over_extruded")
+    vd_normal_images = data_set_folder / "validation_images/normal"
+    vd_under_extruded_images = data_set_folder / "validation_images/under_extruded"
+    vd_over_extruded_images = data_set_folder / "validation_images/over_extruded"
     vd_images = []
     vd_labels = []
 
@@ -120,7 +137,7 @@ def main():
                                                 vd_over_extruded_images,
                                                 class_num=2)
 
-    # Numpy is usually used to deal with multi dimensional arrays
+    # Numpy is usually used to deal with multi dimensional arrays properly
     x_train = np.array(td_images)
     x_val = np.array(vd_images)
 
@@ -135,6 +152,10 @@ def main():
     x_val = x_val / 255
 
     # We call either one of the CNN methodologies
+
+    # with TL, x_train and x_val will be feature data and not image data
+    # Since image data was converted to feature data, the model
+    # will ONLY consist of the classification layers for this
     model, x_train, x_val = generate_model_TL(x_train, x_val)
 
     # model = generate_model()
@@ -152,7 +173,7 @@ def main():
     model.fit(
         x_train,
         y_train,
-        epochs=100,
+        epochs=20,
         shuffle=True,
         validation_data=(x_val, y_val)
     )
