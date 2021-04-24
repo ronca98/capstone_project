@@ -56,17 +56,17 @@ def generate_model():
 # This function is used for transfer learning with an existing neural net
 def generate_model_TL(x_train, x_val):
 
-    # Grabs the convolutional layers from an existing neural net
-    conv_layers = mobilenet.MobileNet(weights="imagenet",
-                                      input_shape=(224, 224, 3),
-                                      include_top=False)
+    # Grabs the feature learning layers from an existing neural net
+    feature_learning_layers = mobilenet.MobileNet(weights="imagenet",
+                                                  input_shape=(224, 224, 3),
+                                                  include_top=False)
     # print(len(pre_trained_nn.layers))
 
     # .predict is NOT used for prediction right now but to send
-    # image data into the convolutional layers of the existing
+    # image data into the feature learning layers of the existing
     # neural net so that it will convert it into feature data
-    x_train = conv_layers.predict(x_train)
-    x_val = conv_layers.predict(x_val)
+    x_train = feature_learning_layers.predict(x_train)
+    x_val = feature_learning_layers.predict(x_val)
 
     # Create a model and add layers
     model = Sequential()

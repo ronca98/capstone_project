@@ -28,10 +28,11 @@ def predict_with_CNN(img):
     list_of_images = np.expand_dims(img, axis=0)
 
     # for TL we convert the images we want to predict into feature data
-    conv_layers = mobilenet.MobileNet(weights="imagenet",
-                                      include_top=False,
-                                      input_shape=(224, 224, 3))
-    features = conv_layers.predict(list_of_images)
+    feature_learning_layers = mobilenet.MobileNet(weights="imagenet",
+                                                  include_top=False,
+                                                  input_shape=(224, 224, 3))
+    features = feature_learning_layers.predict(list_of_images)
+
     # The use of .predict here is the expected use as we now have
     # feature data to feed into a model with strictly classification layers
     results = model.predict(features)
