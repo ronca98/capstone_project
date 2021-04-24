@@ -77,7 +77,7 @@ def generate_model_TL(x_train, x_val):
 
     # Since we have feature data extracted
     # we will input them to our own classification layers
-    model.add(Dense(2048, activation="relu"))
+    model.add(Dense(1024, activation="relu"))
     model.add(Dense(3, activation="softmax"))
 
     return model, x_train, x_val
