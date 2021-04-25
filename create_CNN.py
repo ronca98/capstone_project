@@ -5,6 +5,7 @@ from keras.models import Sequential
 from keras.applications import mobilenet, resnet50, xception
 from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 
 # Function for creating our array of images and labels to feed into model
@@ -23,6 +24,38 @@ def img_array_and_labels(images,
         labels.append(class_num)
 
     return images, labels
+
+
+def visualize_features(x_data):
+    img = np.expand_dims(x_data[0], axis=0)
+    model = mobilenet.MobileNet(weights="imagenet",
+                                input_shape=(224, 224, 3),
+                                include_top=False)
+    feature_maps = model.predict(img)
+
+    square = 32
+    ix = 1
+    for _ in range(square):
+        for _ in range(square):
+            # specify subplot and turn of axis
+            ax = plt.subplot(square, square, ix)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            # plot filter channel in grayscale
+            plt.imshow(feature_maps[0, :, :, ix - 1], cmap='gray')
+            ix += 1
+    # show the figure
+    plt.show()
+
+    # new_model = Sequential()
+    # new_model.add(Flatten())
+
+    # flatten_data = new_model.predict(feature_maps)
+
+    # x_axis = np.arange(1, 50177, 1)
+
+    # plt.plot(x_axis, flatten_data[0], "o")
+    # plt.show()
 
 
 # We can use this function to create our own ConvNet
@@ -150,6 +183,8 @@ def main():
     # Normalize data set to values between 0 and 1
     x_train = x_train / 255
     x_val = x_val / 255
+
+    # visualize_features(x_train)
 
     # We call either one of the CNN methodologies
 
