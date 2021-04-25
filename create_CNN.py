@@ -1,10 +1,12 @@
-import keras
+# import keras
 import numpy as np
 from keras.preprocessing import image
 from keras.models import Sequential
 from keras.applications import mobilenet, resnet50, xception
 from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 from pathlib import Path
+import tensorflow as tf
+from tensorflow import keras
 
 
 # Function for creating our array of images and labels to feed into model
@@ -83,6 +85,26 @@ def generate_model_TL(x_train, x_val):
     return model, x_train, x_val
 
 
+# Transfer learning but feature learning layers are also being trained to have their weights adjusted
+def generate_model_TF_fine_tune():
+    base_model = keras.applications.MobileNet(
+        weights="imagenet",
+        input_shape=(224, 224, 3),
+        include_top=False)
+
+    base_model.trainable = False
+
+    inputs = keras.Input(shape=(224, 224, 3))
+
+    x = base_model(inputs, training=False)
+    x = keras.layers.GlobalAveragePooling2D()(x)
+
+    outputs = keras.layers.Dense(3, activation="softmax")(x)
+    model = keras.Model(inputs, outputs)
+
+    return model, base_model
+
+
 def main():
 
     data_set_folder = Path("data_set")
@@ -151,18 +173,21 @@ def main():
     x_train = x_train / 255
     x_val = x_val / 255
 
-    # We call either one of the CNN methodologies
+    # We call one of the CNN methodologies
 
     # with TL, x_train and x_val will be feature data and not image data
     # Since image data was converted to feature data, the model
     # will ONLY consist of the classification layers for this
-    model, x_train, x_val = generate_model_TL(x_train, x_val)
+    # model, x_train, x_val = generate_model_TL(x_train, x_val)
 
     # model = generate_model()
 
+    model, base_model = generate_model_TF_fine_tune()
+    base_model.trainable = True
+
     # Compile the Model
     model.compile(loss="categorical_crossentropy",
-                  optimizer="adam",
+                  optimizer=keras.optimizers.Adam(1e-5),
                   metrics=["accuracy"])
 
     # Print a summary of model
@@ -173,7 +198,7 @@ def main():
     model.fit(
         x_train,
         y_train,
-        epochs=20,
+        epochs=10,
         shuffle=True,
         validation_data=(x_val, y_val)
     )

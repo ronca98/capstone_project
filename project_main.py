@@ -1,4 +1,4 @@
-from keras.models import model_from_json
+from tensorflow.keras.models import model_from_json
 from pathlib import Path
 from keras.preprocessing import image
 import numpy as np
@@ -28,17 +28,15 @@ def predict_with_CNN(img):
     list_of_images = np.expand_dims(img, axis=0)
 
     # for TL we convert the images we want to predict into feature data
-    feature_learning_layers = mobilenet.MobileNet(weights="imagenet",
-                                                  include_top=False,
-                                                  input_shape=(224, 224, 3))
-    features = feature_learning_layers.predict(list_of_images)
+    # feature_learning_layers = mobilenet.MobileNet(weights="imagenet", include_top=False, input_shape=(224, 224, 3))
+    # features = feature_learning_layers.predict(list_of_images)
 
     # The use of .predict here is the expected use as we now have
     # feature data to feed into a model with strictly classification layers
-    results = model.predict(features)
+    # results = model.predict(features)
 
     # Make a prediction using our created model
-    # results = model.predict(list_of_images)
+    results = model.predict(list_of_images)
 
     class_number = np.argmax(results[0])
     likelihood = np.max(results[0])
@@ -75,8 +73,8 @@ def main():
     img_numbers = []
 
     # This for loop will eventually be replaced with a live feed of images coming in
-    for img_num in range(71, 452):
-        file_path = Path(f"images_to_try/Princess_Leia_normal_{img_num}.png")
+    for img_num in range(79, 332):
+        file_path = Path(f"images_to_try/StarWars_Chess_Storm_Trooper_Underextrusion_{img_num}.png")
         file_name = file_path.name
         file_names.append(file_name)
         img = image.load_img(file_path,
