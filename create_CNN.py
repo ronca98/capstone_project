@@ -27,35 +27,40 @@ def img_array_and_labels(images,
 
 
 def visualize_features(x_data):
-    img = np.expand_dims(x_data[0], axis=0)
+
+    normal_img_sample = image.load_img("underextruded_sample.png",
+                                       color_mode="rgb")
+    img = np.expand_dims(normal_img_sample, axis=0)
     model = mobilenet.MobileNet(weights="imagenet",
                                 input_shape=(224, 224, 3),
                                 include_top=False)
     feature_maps = model.predict(img)
 
-    square = 32
-    ix = 1
-    for _ in range(square):
-        for _ in range(square):
-            # specify subplot and turn of axis
-            ax = plt.subplot(square, square, ix)
-            ax.set_xticks([])
-            ax.set_yticks([])
-            # plot filter channel in grayscale
-            plt.imshow(feature_maps[0, :, :, ix - 1], cmap='gray')
-            ix += 1
-    # show the figure
+    # square = 32
+    # ix = 1
+    # for _ in range(square):
+    #     for _ in range(square):
+    #         # specify subplot and turn of axis
+    #         ax = plt.subplot(square, square, ix)
+    #         ax.set_xticks([])
+    #         ax.set_yticks([])
+    #         # plot filter channel in grayscale
+    #         plt.imshow(feature_maps[0, :, :, ix - 1], cmap='gray')
+    #         ix += 1
+    # # show the figure
+    # plt.show()
+
+    new_model = Sequential()
+    new_model.add(Flatten())
+
+    flatten_data = new_model.predict(feature_maps)
+
+    x_axis = np.arange(1, 50177, 1)
+
+    plt.plot(x_axis, flatten_data[0], "o")
     plt.show()
 
-    # new_model = Sequential()
-    # new_model.add(Flatten())
-
-    # flatten_data = new_model.predict(feature_maps)
-
-    # x_axis = np.arange(1, 50177, 1)
-
-    # plt.plot(x_axis, flatten_data[0], "o")
-    # plt.show()
+    exit()
 
 
 # We can use this function to create our own ConvNet
@@ -184,7 +189,7 @@ def main():
     x_train = x_train / 255
     x_val = x_val / 255
 
-    # visualize_features(x_train)
+    visualize_features(x_train)
 
     # We call either one of the CNN methodologies
 
