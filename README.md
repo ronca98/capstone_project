@@ -14,6 +14,11 @@ over_extruded images <br />
 
 3.) For predicting, use project_main.py and you need to create folder called: <br />
 
-"images_to_try" (must be in same folder as script)
+"images_to_try" (must be in same folder as script) <br />
+After prediction is completed, it will create two files for results in same folder as script: <br />
+
+prediction_results.png <br />
+prediction_results.csv
+
 
 
