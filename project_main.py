@@ -1,4 +1,4 @@
-from keras.models import model_from_json
+from tensorflow.keras.models import model_from_json
 from pathlib import Path
 from keras.preprocessing import image
 import numpy as np
@@ -6,19 +6,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras.applications import mobilenet, resnet50, xception
-import gc
 
 
 # Function used to feed individual images such at the CNN can classify for each
-def predict_with_CNN(img):
-
-    # Load the model's structure in the .json file
-    file_path = Path("model_structure.json")
-    model_structure = file_path.read_text()
-    model = model_from_json(model_structure)
-
-    # Load the weight's file from the .h5 file
-    model.load_weights("model_weights.h5")
+def predict_with_CNN(img, model):
 
     # Convert img to numpy array and normalize data between 0 and 1
     img = image.img_to_array(img) / 255
@@ -28,17 +19,15 @@ def predict_with_CNN(img):
     list_of_images = np.expand_dims(img, axis=0)
 
     # for TL we convert the images we want to predict into feature data
-    feature_learning_layers = mobilenet.MobileNet(weights="imagenet",
-                                                  include_top=False,
-                                                  input_shape=(224, 224, 3))
-    features = feature_learning_layers.predict(list_of_images)
+    # feature_learning_layers = mobilenet.MobileNet(weights="imagenet", include_top=False, input_shape=(224, 224, 3))
+    # features = feature_learning_layers.predict(list_of_images)
 
     # The use of .predict here is the expected use as we now have
     # feature data to feed into a model with strictly classification layers
-    results = model.predict(features)
+    # results = model.predict(features)
 
     # Make a prediction using our created model
-    # results = model.predict(list_of_images)
+    results = model.predict(list_of_images)
 
     class_number = np.argmax(results[0])
     likelihood = np.max(results[0])
@@ -55,12 +44,6 @@ def predict_with_CNN(img):
     class_name = class_names[class_number]
     print(f"Class number {class_number} corresponds to class: {class_name}.")
 
-    # We need to clear after every prediction, this is needed for real-time image feeding into model
-    # Otherwise I will get memory leak
-    del model
-    tf.keras.backend.clear_session()
-    gc.collect()
-
     return (class_number,
             class_name,
             likelihood*100)
@@ -74,9 +57,17 @@ def main():
     likelihoods = []
     img_numbers = []
 
+    # Load the model's structure in the .json file
+    file_path = Path("model_mobilenet_1.00_224_structure.json")
+    model_structure = file_path.read_text()
+    model = model_from_json(model_structure)
+
+    # Load the weight's file from the .h5 file
+    model.load_weights("model_mobilenet_1.00_224_weights.h5")
+
     # This for loop will eventually be replaced with a live feed of images coming in
-    for img_num in range(71, 452):
-        file_path = Path(f"images_to_try/Princess_Leia_normal_{img_num}.png")
+    for img_num in range(75, 363):
+        file_path = Path(f"images_to_try/StarWars_Chess_Storm_Trooper_Pawn_Overextrusion_{img_num}.png")
         file_name = file_path.name
         file_names.append(file_name)
         img = image.load_img(file_path,
@@ -84,7 +75,7 @@ def main():
                              color_mode="rgb")
         print(img_num)
         img_numbers.append(img_num)
-        class_num, class_name, likelihood = predict_with_CNN(img)
+        class_num, class_name, likelihood = predict_with_CNN(img, model)
         class_numbers.append(class_num)
         class_names.append(class_name)
         likelihoods.append(likelihood)
