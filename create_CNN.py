@@ -42,7 +42,7 @@ def generate_model():
     # MaxPooling to reduce size and complexity of feature data before classification
     model.add(MaxPooling2D(pool_size=(4, 4)))
     # randomly cut 25% of neural network
-    # model.add(Dropout(0.25))
+    model.add(Dropout(0.25))
 
     # Feature data needs to be converted to 1D vector
     # before going into classification layers.
@@ -56,7 +56,7 @@ def generate_model():
 
 
 # This function is used for transfer learning with an existing neural net
-def generate_model_TL(x_train, x_val):
+def generate_model_TL(x_train):
 
     # Grabs the feature learning layers from an existing neural net
     feature_learning_layers = mobilenet.MobileNet(weights="imagenet",
@@ -68,7 +68,6 @@ def generate_model_TL(x_train, x_val):
     # image data into the feature learning layers of the existing
     # neural net so that it will convert it into feature data
     x_train = feature_learning_layers.predict(x_train)
-    x_val = feature_learning_layers.predict(x_val)
 
     # Create a model and add layers
     model = Sequential()
@@ -82,7 +81,7 @@ def generate_model_TL(x_train, x_val):
     model.add(Dense(2048, activation="relu"))
     model.add(Dense(3, activation="softmax"))
 
-    return model, x_train, x_val
+    return model, x_train
 
 
 # Transfer learning but feature learning layers are also being trained to have their weights adjusted
@@ -134,56 +133,28 @@ def main():
                                                 over_extruded_images,
                                                 class_num=2)
 
-    # Validation data
-    vd_normal_images = data_set_folder / "validation_images/normal"
-    vd_under_extruded_images = data_set_folder / "validation_images/under_extruded"
-    vd_over_extruded_images = data_set_folder / "validation_images/over_extruded"
-    vd_images = []
-    vd_labels = []
-
-    # Load all validation training images
-    vd_images, vd_labels = img_array_and_labels(vd_images,
-                                                vd_labels,
-                                                vd_normal_images,
-                                                class_num=0)
-
-    # Load all under extruded validation images
-    vd_images, vd_labels = img_array_and_labels(vd_images,
-                                                vd_labels,
-                                                vd_under_extruded_images,
-                                                class_num=1)
-
-    # Load all over extruded validation images
-    vd_images, vd_labels = img_array_and_labels(vd_images,
-                                                vd_labels,
-                                                vd_over_extruded_images,
-                                                class_num=2)
-
     # Numpy is usually used to deal with multi dimensional arrays properly
     x_train = np.array(td_images)
-    x_val = np.array(vd_images)
 
     # Setting up our class labels for keras
     y_train = np.array(td_labels)
-    y_val = np.array(vd_labels)
     y_train = keras.utils.to_categorical(y_train, 3)
-    y_val = keras.utils.to_categorical(y_val, 3)
 
     # Normalize data set to values between 0 and 1
     x_train = x_train / 255
-    x_val = x_val / 255
 
     # We call one of the CNN methodologies
 
     # with TL, x_train and x_val will be feature data and not image data
     # Since image data was converted to feature data, the model
     # will ONLY consist of the classification layers for this
-    # model, x_train, x_val = generate_model_TL(x_train, x_val)
+    # model, x_train, x_val = generate_model_TL(x_train)
 
     # model = generate_model()
 
     model, base_model = generate_model_TF_fine_tune()
     base_model.trainable = True
+    model_name = base_model.name
 
     # Compile the Model
     model.compile(loss="categorical_crossentropy",
@@ -199,17 +170,16 @@ def main():
         x_train,
         y_train,
         epochs=10,
-        shuffle=True,
-        validation_data=(x_val, y_val)
+        shuffle=True
     )
 
     # Save neural network structure
     model_structure = model.to_json()
-    file_path = Path("model_structure.json")
+    file_path = Path(f"model_{model_name}_structure.json")
     file_path.write_text(model_structure)
 
     # Save neural network's trained weights
-    model.save_weights("model_weights.h5")
+    model.save_weights(f"model_{model_name}_weights.h5")
 
 
 if __name__ == '__main__':
