@@ -2,7 +2,7 @@
 
 demo_scripts are just for reference
 
-1.) frame_extract_video.py attempts to target a specified video file in the folder location as the script <br />
+1.) frame_extract_video.py attempts to target a specified video file in the folder location called: "video_files" <br />
 and attempts to output the frames in a specified folder, also same location as the script.
 
 2.) For training, use create_CNN.py <br />

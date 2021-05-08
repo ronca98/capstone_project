@@ -1,11 +1,9 @@
-# import keras
 import numpy as np
 from keras.preprocessing import image
 from keras.models import Sequential
 from keras.applications import mobilenet, resnet50, xception
 from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 from pathlib import Path
-import tensorflow as tf
 from tensorflow import keras
 
 
@@ -98,7 +96,7 @@ def generate_model_TF_fine_tune():
     x = base_model(inputs, training=False)
     x = keras.layers.GlobalAveragePooling2D()(x)
 
-    outputs = keras.layers.Dense(3, activation="softmax")(x)
+    outputs = keras.layers.Dense(4, activation="softmax")(x)
     model = keras.Model(inputs, outputs)
 
     return model, base_model
@@ -112,6 +110,7 @@ def main():
     normal_images = data_set_folder / "normal_images"
     under_extruded_images = data_set_folder / "under_extruded_images"
     over_extruded_images = data_set_folder / "over_extruded_images"
+    no_pattern_images = data_set_folder / "no_pattern"
     td_images = []
     td_labels = []
 
@@ -133,12 +132,17 @@ def main():
                                                 over_extruded_images,
                                                 class_num=2)
 
+    td_images, td_labels = img_array_and_labels(td_images,
+                                                td_labels,
+                                                no_pattern_images,
+                                                class_num=3)
+
     # Numpy is usually used to deal with multi dimensional arrays properly
     x_train = np.array(td_images)
 
     # Setting up our class labels for keras
     y_train = np.array(td_labels)
-    y_train = keras.utils.to_categorical(y_train, 3)
+    y_train = keras.utils.to_categorical(y_train, 4)
 
     # Normalize data set to values between 0 and 1
     x_train = x_train / 255
