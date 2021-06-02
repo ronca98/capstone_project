@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from keras.applications import mobilenet, resnet50, xception
+from keras.applications import mobilenet
 import cv2
 
 

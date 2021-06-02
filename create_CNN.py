@@ -1,7 +1,7 @@
 import numpy as np
 from keras.preprocessing import image
 from keras.models import Sequential
-from keras.applications import mobilenet, resnet50, xception
+from keras.applications import mobilenet
 from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 from pathlib import Path
 from tensorflow import keras
