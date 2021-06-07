@@ -8,6 +8,7 @@ and attempts to output the frames in a specified folder, also same location as t
 2.) For training, use create_CNN.py <br />
 Script will read training data from folder: "data_set" and will contain these subfolders with .png image data
 
+no_pattern <br />
 normal_images <br />
 under_extruded_images <br /> 
 over_extruded images <br />
