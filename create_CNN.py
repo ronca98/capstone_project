@@ -79,24 +79,44 @@ def main():
     # will ONLY consist of the classification layers for this
     # model, x_train, x_val = generate_model_TL(x_train)
 
-    model, base_model = generate_model_TF_fine_tune()
-    base_model.trainable = True
-    model_name = base_model.name
+    # model, base_model = generate_model_TF_fine_tune()
+    # base_model.trainable = True
+    # model_name = base_model.name
+    #
+    # # Compile the Model
+    # model.compile(loss="categorical_crossentropy",
+    #               optimizer=keras.optimizers.Adam(1e-5),
+    #               metrics=["accuracy"])
+    #
+    # # Print a summary of model
+    # # Note, Param # means total number of weights in that layer
+    # model.summary()
+    #
+    # # Train the model
+    # model.fit(
+    #     training_data,
+    #     epochs=10
+    # )
 
-    # Compile the Model
-    model.compile(loss="categorical_crossentropy",
-                  optimizer=keras.optimizers.Adam(1e-5),
-                  metrics=["accuracy"])
-
-    # Print a summary of model
-    # Note, Param # means total number of weights in that layer
-    model.summary()
-
-    # Train the model
-    model.fit(
+    auto_keras_model = autokeras.ImageClassifier(max_trials=5,
+                                                 num_classes=4)
+    print(f"accuracy = {auto_keras_model}")
+    auto_keras_model.fit(
         training_data,
-        epochs=10
+        epochs=10,
+        shuffle=True
     )
+    model_name = "auto_keras"
+
+    model = auto_keras_model.export_model()
+
+    # Save neural network structure
+    model_structure = model.to_json()
+    file_path = Path(f"model_{model_name}_structure.json")
+    file_path.write_text(model_structure)
+
+    # Save neural network's trained weights
+    model.save_weights(f"model_{model_name}_weights.h5")
 
     # Save neural network structure
     model_structure = model.to_json()
