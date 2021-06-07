@@ -4,6 +4,7 @@ from keras.layers import Dense, Flatten
 from pathlib import Path
 from tensorflow import keras
 import tensorflow as tf
+import autokeras
 
 
 def process(image_file, label):
