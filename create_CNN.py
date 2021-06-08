@@ -35,7 +35,7 @@ def generate_model_TL(x_train):
     # Since we have feature data extracted
     # we will input them to our own classification layers
     model.add(Dense(1024, activation="relu"))
-    model.add(Dense(3, activation="softmax"))
+    model.add(Dense(4, activation="softmax"))
 
     return model, x_train
 
@@ -62,7 +62,7 @@ def generate_model_TF_fine_tune():
 
 def main():
 
-    training_data = tf.keras.preprocessing.image_dataset_from_directory("data_set/",
+    training_data = tf.keras.preprocessing.image_dataset_from_directory("data_set_15",
                                                                         image_size=(224, 224),
                                                                         label_mode="categorical",
                                                                         shuffle=True,
@@ -99,11 +99,11 @@ def main():
 
     # Save neural network structure
     model_structure = model.to_json()
-    file_path = Path(f"model_{model_name}_structure.json")
+    file_path = Path(f"model_{model_name}_15_fill_structure.json")
     file_path.write_text(model_structure)
 
     # Save neural network's trained weights
-    model.save_weights(f"model_{model_name}_weights.h5")
+    model.save_weights(f"model_{model_name}_15_fill_weights.h5")
 
 
 if __name__ == '__main__':

@@ -37,13 +37,13 @@ def video_to_frames(vid_file, output_folder):
 
 
 def main():
-    video_files_list = ["video_files/potato2_15-_fill_normal.mp4",
-                        "video_files/potato2_15-_fill_over.mp4",
-                        "video_files/potato2_15-_fill_under.mp4"]
+    video_files_list = ["video_files/random_shape_4_15-_fill_normal.mp4",
+                        "video_files/random_shape_4_15-_fill_over.mp4",
+                        "video_files/random_shape_4_15-_fill_under.mp4"]
 
-    output_folders_list = ["data_set_15/normal_images",
-                           "data_set_15/over_extruded_images",
-                           "data_set_15/under_extruded_images"]
+    output_folders_list = ["images_to_try",
+                           "images_to_try",
+                           "images_to_try"]
 
     for vid_file, output_folder in zip(video_files_list,
                                        output_folders_list):

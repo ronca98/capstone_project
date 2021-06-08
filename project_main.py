@@ -65,9 +65,9 @@ def prediction_testing(model):
     img_numbers = []
     img_array = []
 
-    for img_num in range(71, 527):
+    for img_num in range(0, 620):
         print(img_num)
-        file_path = Path(f"images_to_try/Princess_Leia_normal_{img_num}.png")
+        file_path = Path(f"images_to_try/random_shape_4_15-_fill_under_{img_num}.png")
         file_name = file_path.name
         file_names.append(file_name)
 
@@ -136,12 +136,12 @@ def predict_with_CNN(img, model):
 def main():
 
     # Load the model's structure in the .json file
-    file_path = Path("model_mobilenet_1.00_224_structure.json")
+    file_path = Path("model_mobilenet_1.00_224_15_fill_structure.json")
     model_structure = file_path.read_text()
     model = model_from_json(model_structure)
 
     # Load the weight's file from the .h5 file
-    model.load_weights("model_mobilenet_1.00_224_weights.h5")
+    model.load_weights("model_mobilenet_1.00_224_15_fill_weights.h5")
 
     # Code for testing predictions, commented out for real time operation
     prediction_testing(model)
