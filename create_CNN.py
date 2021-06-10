@@ -99,7 +99,7 @@ def main():
 
     # Save neural network structure
     model_structure = model.to_json()
-    file_path = Path(f"model_{model_name}_15_fill_structure.json")
+    file_path = Path(f"model_{model_name}_structure.json")
     file_path.write_text(model_structure)
 
     # Save neural network's trained weights

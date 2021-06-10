@@ -136,7 +136,7 @@ def predict_with_CNN(img, model):
 def main():
 
     # Load the model's structure in the .json file
-    file_path = Path("model_mobilenet_1.00_224_15_fill_structure.json")
+    file_path = Path("model_mobilenet_1.00_224_structure.json")
     model_structure = file_path.read_text()
     model = model_from_json(model_structure)
 
